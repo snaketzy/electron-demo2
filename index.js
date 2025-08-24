@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
 import os from "os";
 
 let mainWin;
+let targetWin;
 app.on("ready", () => {
     mainWin = new BrowserWindow({
         width: 1366,
@@ -12,11 +13,27 @@ app.on("ready", () => {
             contextIsolation: false
         }
     })
+
+    targetWin = new BrowserWindow({
+        width: 1280,
+        height: 768,
+        webPreferences:{
+            nodeIntegration: true,
+            nodeIntegrationInSubFrames: true,
+            contextIsolation: false
+        },
+        x: 0,
+        autoHideMenuBar:true,
+        frame: false,
+        show: false,
+        resizable: false
+    })
     
     console.log("开发测试")
     console.log(os.version())
     
-    mainWin.loadFile("renderer/pure/index.html")    
+    mainWin.loadFile("renderer/pure/index.html")   
+    targetWin.loadURL("https://premoss.viphrm.com") 
     
     handleRenderer()
     createMenu()
@@ -27,10 +44,20 @@ const handleRenderer = () => {
     ipcMain.handle("data-transfer" ,(event,data) => {
         console.log("data:", data)
     })
+
+    ipcMain.handle("toggleTargetWindow",(event, data) => {
+      if(data.status === "show") {
+        targetWin.show()
+      } else {
+        targetWin.hide()
+      }
+    })
 }
 
+
 setTimeout(() => {
-  mainWin.webContents.send("updateUserInfo",{user:"test"})
+  // debugger
+  // mainWin.webContents.send("updateUserInfo",{user:"test"})
 }, 1000)
 
 
@@ -77,3 +104,4 @@ const createMenu = () => {
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 }
+

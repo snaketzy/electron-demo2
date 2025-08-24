@@ -6,6 +6,10 @@
   "repository": "https://github.com/snaketzy/electron-demo2.git",
   "author": "Jerry Tang <snaketzy@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "chcp 65001 && electron .",
+    "pacakge": "electron-builder --dir"  
+  },
   "dependencies": {
     "electron": "^37.3.1",
     "electron-builder": "^26.0.12"

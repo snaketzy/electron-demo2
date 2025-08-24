@@ -8,7 +8,11 @@ function showConfig() {
     alert("配置模块已显示！");
 }
 
+async function hideIframe () {
+  document.getElementById("content-iframe").style.display = "none"
 
-async function toggleTheme () {
-    return await ipcRenderer.invoke("toggleTheme")
+}
+
+const showIframe = () => {
+  document.getElementById("content-iframe").style.display = "block"
 }

@@ -1,0 +1,7 @@
+#content-iframe {
+  margin-top: 16px;
+  width: 1300px;
+  height: 600px;
+  overflow: auto;
+  border: none;
+}

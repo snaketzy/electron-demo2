@@ -82,7 +82,7 @@ const createMenu = () => {
           label:"关于(F1)",
           accelerator:"F1",
           click:() => {
-            shell.openExternal("https://www.viphrm.com")
+            shell.openExternal("https://premoss.viphrm.com/")
           }
         }
       ]

@@ -1,8 +1,24 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
+import { 
+  app, 
+  BrowserWindow,
+  ipcMain, 
+  Menu, 
+  shell,
+  session,
+  net
+} from "electron";
 import os from "os";
+import url from "url";
+import path from "path";
+import GetHttpData from "./GetHttpData.js";
+
+
 
 let mainWin;
 let targetWin;
+let __filename = url.fileURLToPath(import.meta.url);
+let __dirname = path.dirname(__filename);
+
 app.on("ready", () => {
     mainWin = new BrowserWindow({
         width: 1366,
@@ -10,30 +26,39 @@ app.on("ready", () => {
         webPreferences:{
             nodeIntegration: true,
             nodeIntegrationInSubFrames: true,
-            contextIsolation: false
-        }
+            contextIsolation: false,
+            webSecurity: false,
+            allowRunningInsecureContent: true
+        },
+        resizable: false
+        
     })
 
     targetWin = new BrowserWindow({
         width: 1280,
         height: 768,
         webPreferences:{
+            webSecurity:false,
             nodeIntegration: true,
+            contextIsolation: true,
             nodeIntegrationInSubFrames: true,
-            contextIsolation: false
+            allowRunningInsecureContent: true,
+            preload: path.join(__dirname, "renderer/preload.mjs")
         },
         x: 0,
         autoHideMenuBar:true,
         frame: false,
-        show: false,
+        // show: false,
         resizable: false
     })
-    
+
     console.log("开发测试")
     console.log(os.version())
     
     mainWin.loadFile("renderer/pure/index.html")   
     targetWin.loadURL("https://premoss.viphrm.com") 
+
+    GetHttpData(targetWin,2)
     
     handleRenderer()
     createMenu()
@@ -51,6 +76,11 @@ const handleRenderer = () => {
       } else {
         targetWin.hide()
       }
+    })
+
+    ipcMain.handle("fetch-response",(event, data) => {
+      debugger
+      console.log(data)
     })
 }
 

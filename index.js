@@ -2,9 +2,8 @@ import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
 import os from "os";
 
 let mainWin;
-let bossWin;
 app.on("ready", () => {
-    let mainWin = new BrowserWindow({
+    mainWin = new BrowserWindow({
         width: 1366,
         height: 768,
         webPreferences:{
@@ -14,40 +13,26 @@ app.on("ready", () => {
         }
     })
     
-    // let bossWin = new BrowserWindow({
-    //     width: 1366,
-    //     height: 768,
-    //     webPreferences:{
-    //         nodeIntegration: true,
-    //         nodeIntegrationInSubFrames: true,
-    //         contextIsolation: false,
-    //         webSecurity: false
-    //     },
-    //     disableAutoHideCursor: true,
-    //     resizable: false
-    // })
-
     console.log("开发测试")
     console.log(os.version())
-    // mainWin.webContents.setWindowOpenHandler((open) => {
-       
-    //     return {action:"deny"}
-    // })
-
+    
     mainWin.loadFile("renderer/pure/index.html")    
-    // mainWin.hide()
-    // bossWin.loadURL("https:/www.zhipin.com")
-    // bossWin.hide()
+    
     handleRenderer()
     createMenu()
 })
 
+/** 处理渲染进程 */
 const handleRenderer = () => {
     ipcMain.handle("data-transfer" ,(event,data) => {
         console.log("data:", data)
     })
-    
 }
+
+setTimeout(() => {
+  mainWin.webContents.send("updateUserInfo",{user:"test"})
+}, 1000)
+
 
 /** 创建菜单 */
 const createMenu = () => {

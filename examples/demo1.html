@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron接口拦截演示</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #3498db;
+        }
+        .card.intercept {
+            border-left-color: #e74c3c;
+        }
+        .card.result {
+            border-left-color: #2ecc71;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2ecc71;
+        }
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow: auto;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .response-area {
+            margin-top: 20px;
+        }
+        .endpoint {
+            font-family: monospace;
+            background: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .note {
+            background: #fff4e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #ffa94d;
+        }
+        .flex-row {
+            display: flex;
+            gap: 20px;
+        }
+        .col {
+            flex: 1;
+        }
+        @media (max-width: 768px) {
+            .flex-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Electron渲染进程接口拦截演示</h1>
+            <p class="description">展示如何在Electron的渲染进程中拦截和修改API响应</p>
+        </header>
+
+        <div class="flex-row">
+            <div class="col">
+                <div class="card">
+                    <h2>API测试</h2>
+                    <p>点击下方按钮测试API调用：</p>
+                    <div class="btn-group">
+                        <button class="btn-primary" id="fetchBtn">使用fetch调用API</button>
+                        <button class="btn-primary" id="xhrBtn">使用XHR调用API</button>
+                    </div>
+                    <div class="toggle-container">
+                        <label class="toggle">
+                            <input type="checkbox" id="interceptToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>启用响应拦截</span>
+                    </div>
+                </div>
+
+                <div class="card intercept">
+                    <h2>拦截实现</h2>
+                    <p>此演示通过以下方式拦截API响应：</p>
+                    <ul>
+                        <li>重写XMLHttpRequest的send和open方法</li>
+                        <li>重写全局fetch方法</li>
+                        <li>修改响应数据并返回自定义内容</li>
+                    </ul>
+                    <div class="note">
+                        <strong>注意：</strong> 在实际项目中，这种方法可能会与某些库冲突，需要谨慎使用。
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card result">
+                    <h2>API响应结果</h2>
+                    <p>当前请求端点：<span class="endpoint">https://jsonplaceholder.typicode.com/todos/1</span></p>
+                    <div class="response-area">
+                        <pre id="response">响应将显示在这里...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 拦截状态
+        let interceptEnabled = true;
+
+        // DOM元素
+        const fetchBtn = document.getElementById('fetchBtn');
+        const xhrBtn = document.getElementById('xhrBtn');
+        const interceptToggle = document.getElementById('interceptToggle');
+        const responseElement = document.getElementById('response');
+
+        // 更新响应显示
+        function updateResponse(data, type) {
+            responseElement.textContent = `// 来自${type}的响应\n${JSON.stringify(data, null, 2)}`;
+        }
+
+        // 拦截实现
+        function setupInterception() {
+            // 保存原始方法
+            const originalFetch = window.fetch;
+            const originalXHROpen = XMLHttpRequest.prototype.open;
+            const originalXHRSend = XMLHttpRequest.prototype.send;
+
+            // 重写fetch
+            window.fetch = function(...args) {
+                return originalFetch.apply(this, args).then(response => {
+                    if (!interceptEnabled) return response;
+                    
+                    // 克隆响应以便读取
+                    return response.clone().json().then(data => {
+                        // 修改响应数据
+                        const modifiedData = {
+                            ...data,
+                            intercepted: true,
+                            message: "这个响应已被拦截修改!",
+                            originalTitle: data.title,
+                            title: "被修改的标题"
+                        };
+                        
+                        updateResponse(modifiedData, 'fetch');
+                        
+                        // 返回修改后的响应
+                        return new Response(JSON.stringify(modifiedData), {
+                            status: response.status,
+                            statusText: response.statusText,
+                            headers: response.headers
+                        });
+                    });
+                });
+            };
+
+            // 重写XHR
+            XMLHttpRequest.prototype.open = function(...args) {
+                this._url = args[1];
+                return originalXHROpen.apply(this, args);
+            };
+
+            XMLHttpRequest.prototype.send = function(...args) {
+                this.addEventListener('load', function() {
+                    if (!interceptEnabled) return;
+                    
+                    if (this.responseText) {
+                        try {
+                            const data = JSON.parse(this.responseText);
+                            // 修改响应数据
+                            const modifiedData = {
+                                ...data,
+                                intercepted: true,
+                                message: "这个响应已被拦截修改!",
+                                originalTitle: data.title,
+                                title: "被修改的标题"
+                            };
+                            
+                            updateResponse(modifiedData, 'XHR');
+                            
+                            // 重写responseText（注意：这在实际项目中可能不总是有效）
+                            Object.defineProperty(this, 'responseText', {
+                                value: JSON.stringify(modifiedData),
+                                writable: false
+                            });
+                        } catch (e) {
+                            console.error('Error parsing JSON:', e);
+                        }
+                    }
+                });
+                return originalXHRSend.apply(this, args);
+            };
+        }
+
+        // 初始化拦截
+        setupInterception();
+
+        // 事件监听
+        fetchBtn.addEventListener('click', () => {
+            fetch('https://jsonplaceholder.typicode.com/todos/1')
+                .then(response => response.json())
+                .then(data => {
+                    if (!interceptEnabled) updateResponse(data, 'fetch');
+                })
+                .catch(error => {
+                    responseElement.textContent = `错误: ${error.message}`;
+                });
+        });
+
+        xhrBtn.addEventListener('click', () => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://jsonplaceholder.typicode.com/todos/1');
+            xhr.send();
+            xhr.onload = function() {
+                if (!interceptEnabled) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        updateResponse(data, 'XHR');
+                    } catch (e) {
+                        responseElement.textContent = `错误: ${e.message}`;
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                responseElement.textContent = '请求发生错误';
+            };
+        });
+
+        interceptToggle.addEventListener('change', () => {
+            interceptEnabled = interceptToggle.checked;
+        });
+    </script>
+</body>
+</html>

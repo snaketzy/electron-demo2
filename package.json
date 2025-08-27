@@ -8,11 +8,14 @@
   "license": "MIT",
   "scripts": {
     "start": "chcp 65001 && electron .",
-    "pacakge": "electron-builder --dir"  
+    "automate": "node ./Automate.js",
+    "pacakge": "electron-builder --dir"
   },
   "dependencies": {
     "electron": "^37.3.1",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "node-fetch": "2",
+    "puppeteer-core": "^24.17.0"
   },
   "resolutions": {
     "minimatch": "9.0.5"

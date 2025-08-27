@@ -19,6 +19,9 @@ let targetWin;
 let __filename = url.fileURLToPath(import.meta.url);
 let __dirname = path.dirname(__filename);
 
+// 启用调试端口 
+app.commandLine.appendSwitch('remote-debugging-port', '9222');
+
 app.on("ready", () => {
     mainWin = new BrowserWindow({
         width: 1366,

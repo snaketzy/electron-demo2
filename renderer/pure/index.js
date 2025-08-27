@@ -5,7 +5,7 @@ ipcRenderer.on('updateUserInfo', (event, value) => {
   console.log("updateUserInfo", value)
 })
 
-
+/** 监听主进程推送的接口报文 */
 ipcRenderer.on('responseReceived', (event, value) => {
   if(value.params.response.url.includes("userAndCompany")) {
     console.log("responseReceived", value)

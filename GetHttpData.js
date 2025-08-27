@@ -1,4 +1,5 @@
 import { webContents } from "electron";
+console.log("gethttpdata模块")
 
 /**
  * 可以获取到发送请求是的数据
@@ -18,9 +19,27 @@ import { webContents } from "electron";
  * @constructor hzq
  */
 
-function GetHttpData(webWindow,id) { 
+function GetHttpData(webWindow,mainWindow) { 
+  
   try {
+    console.log("GetHttpData方法")
     webWindow.webContents.debugger.attach("1.1"); 
+    webWindow.webContents.debugger.sendCommand('Network.enable');
+    webWindow.webContents.debugger.on('message', (event, method, params) => {
+      // console.log("message.method",method)
+      // console.log("message.params",params)
+      if (method === 'Network.responseReceived') {
+      webWindow.webContents.debugger.sendCommand('Network.getResponseBody', { requestId: params.requestId })
+        .then(response => {
+          if(params.response.mimeType === "application/json") {
+            console.log("message.params",params)
+            console.log("message.response", response)
+            mainWindow.send("responseReceived",{params, response})
+          }
+        });
+      }
+    });
+    webWindow.loadURL("https://premoss.viphrm.com") 
   } catch (err) {
     console.log('调试器连接失败: ', err)
   }
@@ -30,21 +49,24 @@ function GetHttpData(webWindow,id) {
   });
   
   // 监听网络请求事件
-  webWindow.webContents.debugger.on("message", (event, method, params) => {
-    if (method === "Network.requestWillBeSent") {
-      webContents.fromId(id).send("GetHttpData",{type:"req",url:params.request.url},params)
-    }
+  // webWindow.webContents.debugger.on("message", (event, method, params) => {
+  //   console.log("message事件")
+  //   if (method === "Network.requestWillBeSent") {
+  //     webContents.fromId(id).send("GetHttpData",{type:"req",url:params.request.url},params)
+  //   }
 
-    if (method === "Network.loadingFinished") {
-      var mimeType = params.response.mimeType;
-      if (mimeType === "application/json") {
-        debugger
-        webWindow.webContents.debugger.sendCommand("Network.getResponseBody", { requestId: params.requestId }).then(function(response) {
-          webContents.fromId(2).send("log",params.response.url,JSON.parse(response.body))
-        });
-      }
-    }
-  });
+  //   if (method === "Network.loadingFinished") {
+  //     var mimeType = params.response.mimeType;
+  //     if (mimeType === "application/json") {
+  //       debugger
+  //       webWindow.webContents.debugger.sendCommand("Network.getResponseBody", { requestId: params.requestId }).then(function(response) {
+  //         webContents.fromId(2).send("log",params.response.url,JSON.parse(response.body))
+  //       });
+  //     }
+  //   }
+  //   webWindow.webContents.debugger.sendCommand("Network.enable");
+  // });
+  
 }
 
 export default GetHttpData;

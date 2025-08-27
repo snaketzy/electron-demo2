@@ -56,9 +56,10 @@ app.on("ready", () => {
     console.log(os.version())
     
     mainWin.loadFile("renderer/pure/index.html")   
-    targetWin.loadURL("https://premoss.viphrm.com") 
+    // targetWin.loadURL("https://premoss.viphrm.com") 
 
-    GetHttpData(targetWin,2)
+    console.log("主进程")
+    GetHttpData(targetWin,mainWin)
     
     handleRenderer()
     createMenu()

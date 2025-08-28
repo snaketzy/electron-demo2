@@ -14,8 +14,13 @@ async function getWebSocketUrl() {
 
 (async () => { 
   const wsUrl = await getWebSocketUrl(); 
+  console.log(wsUrl)
+  return;
   const browser = await puppeteer.connect({ 
-    browserWSEndpoint: wsUrl
+    browserWSEndpoint: wsUrl,
+    dumpio: true,
+    ignoreHTTPSErrors: true,
+    slowMo: 100
   }); 
   console.log(await browser.version());
   const [page] = await browser.pages(); 

@@ -12,6 +12,10 @@
     <div class="index-container">
         <div class="action">
             <button onclick="dataTrigger()">显示配置模块</button>
+            <button id = "start" onclick="tickTock('start')">开始业务操作</button>
+            <button id="pause" onclick="tickTock('pause')" disabled = "true">暂停业务操作</button>
+            <button id="stop" onclick="tickTock('stop')" disabled = "true">停止业务操作</button>
+            <button id = "resume" onclick="tickTock('resume')" disabled = "true">恢复业务操作</button>
             <button onclick="showTargetWindow()">显示BOSS窗口</button>
             <button onclick="hideTargetWindow()">隐藏BOSS窗口</button>
         </div> 
@@ -19,6 +23,10 @@
           <div class="user-info">
             <div>登陆用户名：<span></span></div>
             <div>登陆公司：<span></span></div>
+          </div>
+          <div>
+            <span>计时器：</span>
+            <span id="timer"></span>
           </div>
         </div>
     </div>

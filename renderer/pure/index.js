@@ -1,4 +1,5 @@
 const { ipcRenderer } = require("electron")
+const tickTockStatue = false;
 
 /** 监听主进程推送 */
 ipcRenderer.on('updateUserInfo', (event, value) => {
@@ -16,6 +17,11 @@ ipcRenderer.on('responseReceived', (event, value) => {
   }
 })
 
+/** 监听主进程推送的定时器数据 */
+ipcRenderer.on("updateTimer", (event, data) => {
+  document.querySelector("#timer").innerText = data.value;
+})
+
 const dataTrigger = () => {
     ipcRenderer.invoke("data-transfer","ok")
 }
@@ -31,4 +37,20 @@ function showTargetWindow() {
 
 function hideTargetWindow() {
   ipcRenderer.invoke("toggleTargetWindow",{windowName:"targetWin", status: "hide"})
+}
+
+function tickTock(type) {
+  if(type === "start" || "resume") {
+    document.querySelector(`#${type}`).setAttribute("disabled","true");
+    document.querySelector(`#pause`).removeAttribute("disabled");
+    document.querySelector(`#stop`).removeAttribute("disabled");
+  }
+  if(type === "pause") {
+    document.querySelector(`#resume`).removeAttribute("disabled");
+  }
+  if(type === "stop") {
+    document.querySelector(`#start`).removeAttribute("disabled");
+  }
+  ipcRenderer.invoke("tick-tock",{status: type })
+  
 }

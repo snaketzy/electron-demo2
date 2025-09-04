@@ -20,6 +20,10 @@ let targetWin;
 let __filename = url.fileURLToPath(import.meta.url);
 let __dirname = path.dirname(__filename);
 
+
+let timer = null;
+let timerValue = 0;
+
 // 启用调试端口 
 app.commandLine.appendSwitch('remote-debugging-port', '9222');
 
@@ -111,13 +115,13 @@ const createTargetWindow = () => {
 }
 
 
-
 /** 处理渲染进程 */
 const handleRenderer = () => {
     ipcMain.handle("data-transfer" ,(event,data) => {
         console.log("data:", data)
     })
 
+    /** 监听渲染进程的toggleTargetWindow通知 */
     ipcMain.handle("toggleTargetWindow",(event, data) => {
       if(data.status === "show") {
         targetWin.showInactive()
@@ -126,10 +130,33 @@ const handleRenderer = () => {
       }
     })
 
+    /** 监听渲染进程的定时器通知 */
+    ipcMain.handle("tick-tock", (event,data ) => {
+      startTimer(data.status)
+    })
+
     ipcMain.handle("fetch-response",(event, data) => {
       debugger
       console.log(data)
     })
+}
+
+
+const startTimer = (status) => {
+  if(timer && status === "start") return;
+  if(status === "start") {
+    timer = setInterval(() => {
+      timerValue ++;
+      mainWin.send("updateTimer",{ value: timerValue})
+    }, 1000)
+  }
+  if(status === "pause") {
+    clearInterval(timer)
+  }
+  if(status === "stop"){
+    clearInterval(timer)
+    timerValue = 0
+  }
 }
 
 

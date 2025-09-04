@@ -5,7 +5,8 @@ import {
   Menu, 
   shell,
   session,
-  net
+  net,
+  screen
 } from "electron";
 import os from "os";
 import url from "url";
@@ -23,24 +24,33 @@ let __dirname = path.dirname(__filename);
 app.commandLine.appendSwitch('remote-debugging-port', '9222');
 
 app.on("ready", () => {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+    const windowWidth = Math.floor(screenWidth / 2); // 窗口宽度为屏幕宽度的一半
+    const windowHeight = Math.floor(screenHeight * 0.75); // 窗口高度为屏幕高度的3/4，可根据需要调整
+    const windowX = Math.floor(windowWidth / 3); // x坐标设置为0，即紧贴屏幕左边缘
+    const windowY = Math.floor((screenHeight - windowHeight) / 2); // 计算y坐标以使窗口在垂直方向上居中
+
     mainWin = new BrowserWindow({
-        width: 800,
-        height: 768,
-        webPreferences:{
-            nodeIntegration: true,
-            nodeIntegrationInSubFrames: true,
-            contextIsolation: false,
-            webSecurity: false,
-            allowRunningInsecureContent: true
-        },
-        resizable: false
+      x: windowX,
+      y: windowY,
+      width: 1280,
+      height: 200,
+      webPreferences:{
+          nodeIntegration: true,
+          nodeIntegrationInSubFrames: true,
+          contextIsolation: false,
+          webSecurity: false,
+          allowRunningInsecureContent: true
+      },
+      resizable: false
     })
 
     console.log("开发测试")
     console.log(os.version())
     
-    mainWin.loadFile("renderer/pure/index.html")   
-    createTargetWindow(mainWin, )
+    mainWin.loadFile("renderer/pure/index.html")
+    createTargetWindow()
     // targetWin.loadURL("https://premoss.viphrm.com") 
 
     console.log("主进程")
@@ -66,8 +76,8 @@ const updateSecondWindowPosition = () => {
   const mainSize = mainWin.getSize();
 
   // 计算窗口B的新位置
-  const newX = mainPosition[0] + mainSize[0];
-  const newY = mainPosition[1];
+  const newX = mainPosition[0];
+  const newY = mainPosition[1] + mainSize[1];
 
   // 设置窗口B的位置
   targetWin.setPosition(newX, newY);
@@ -76,8 +86,8 @@ const updateSecondWindowPosition = () => {
 const createTargetWindow = () => {
   const mainWinPosition = mainWin.getPosition();
   const mainWinSize = mainWin.getSize();
-  const targetWinX = mainWinPosition[0] + mainWinSize[0];
-  const targetWinY = mainWinPosition[1];
+  const targetWinX = mainWinPosition[0];
+  const targetWinY = mainWinPosition[1] + mainWinSize[1];
 
   targetWin = new BrowserWindow({
     width: 1280,
@@ -90,14 +100,13 @@ const createTargetWindow = () => {
         allowRunningInsecureContent: true,
         preload: path.join(__dirname, "renderer/preload.mjs")
     },
-    x: targetWinX,
-    y: targetWinY,
     autoHideMenuBar:true,
     frame: false,
     show: false,
     showInactive: true,
     resizable: false
   })
+  targetWin.setPosition(targetWinX, targetWinY);
   GetHttpData(targetWin,mainWin)
 }
 

@@ -34,7 +34,6 @@ app.on("ready", () => {
             allowRunningInsecureContent: true
         },
         resizable: false
-        
     })
 
     targetWin = new BrowserWindow({

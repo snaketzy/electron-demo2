@@ -23,49 +23,60 @@ let __dirname = path.dirname(__filename);
 app.commandLine.appendSwitch('remote-debugging-port', '9222');
 
 app.on("ready", () => {
-    mainWin = new BrowserWindow({
-        width: 1366,
-        height: 768,
-        webPreferences:{
-            nodeIntegration: true,
-            nodeIntegrationInSubFrames: true,
-            contextIsolation: false,
-            webSecurity: false,
-            allowRunningInsecureContent: true
-        },
-        resizable: false
-        
-    })
+  // 应用就绪后，再获取 defaultSession 并设置监听
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['*://*/*'] }, // 考虑使用更明确的 URL 模式
+    (details, callback) => {
+      // 添加或修改请求头
+      details.requestHeaders['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36';
+      details.requestHeaders['sec-ch-ua'] = '"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"';
+      // 通过 callback 继续发送请求并传入修改后的请求头
+      callback({ cancel: false, requestHeaders: details.requestHeaders });
+    }
+  );
+  mainWin = new BrowserWindow({
+      width: 1366,
+      height: 768,
+      webPreferences:{
+          nodeIntegration: true,
+          nodeIntegrationInSubFrames: true,
+          contextIsolation: false,
+          webSecurity: false,
+          allowRunningInsecureContent: true
+      },
+      resizable: false
+      
+  })
 
-    targetWin = new BrowserWindow({
-        width: 1280,
-        height: 768,
-        webPreferences:{
-            webSecurity:false,
-            nodeIntegration: true,
-            contextIsolation: true,
-            nodeIntegrationInSubFrames: true,
-            allowRunningInsecureContent: true,
-            preload: path.join(__dirname, "renderer/preload.mjs")
-        },
-        x: 0,
-        autoHideMenuBar:true,
-        frame: false,
-        // show: false,
-        resizable: false
-    })
+  targetWin = new BrowserWindow({
+      width: 1280,
+      height: 768,
+      webPreferences:{
+          webSecurity:false,
+          nodeIntegration: true,
+          contextIsolation: true,
+          nodeIntegrationInSubFrames: true,
+          allowRunningInsecureContent: true,
+          preload: path.join(__dirname, "renderer/preload.mjs")
+      },
+      x: 0,
+      autoHideMenuBar:true,
+      frame: false,
+      // show: false,
+      resizable: false
+  })
 
-    console.log("开发测试")
-    console.log(os.version())
-    
-    mainWin.loadFile("renderer/pure/index.html")   
-    // targetWin.loadURL("https://premoss.viphrm.com") 
+  console.log("开发测试")
+  console.log(os.version())
+  
+  mainWin.loadFile("renderer/pure/index.html")   
+  // targetWin.loadURL("https://premoss.viphrm.com") 
 
-    console.log("主进程")
-    GetHttpData(targetWin,mainWin)
-    
-    handleRenderer()
-    createMenu()
+  console.log("主进程")
+  GetHttpData(targetWin,mainWin)
+  
+  handleRenderer()
+  createMenu()
 })
 
 /** 处理渲染进程 */

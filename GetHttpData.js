@@ -23,6 +23,8 @@ function GetHttpData(webWindow,mainWindow) {
   
   try {
     console.log("GetHttpData方法")
+    webWindow.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36');
+
     webWindow.webContents.debugger.attach("1.1"); 
     webWindow.webContents.debugger.sendCommand('Network.enable');
     webWindow.webContents.debugger.on('message', (event, method, params) => {
@@ -39,7 +41,9 @@ function GetHttpData(webWindow,mainWindow) {
         });
       }
     });
-    webWindow.loadURL("https://premoss.viphrm.com") 
+    // webWindow.loadURL("https://premoss.viphrm.com") 
+    // webWindow.loadURL("https://bot.sannysoft.com/") 
+    webWindow.loadURL("https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html") 
   } catch (err) {
     console.log('调试器连接失败: ', err)
   }

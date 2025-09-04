@@ -23,23 +23,39 @@ function GetHttpData(webWindow,mainWindow) {
   
   try {
     console.log("GetHttpData方法")
+    let frameId = null;
     webWindow.webContents.debugger.attach("1.1"); 
     webWindow.webContents.debugger.sendCommand('Network.enable');
     webWindow.webContents.debugger.on('message', (event, method, params) => {
       // console.log("message.method",method)
       // console.log("message.params",params)
+      
+      if(method === "Network.requestWillBeSent") {
+        /** 消息到达通知，因为需要多端同步消息，因此其他端的招聘方发送消息也会触发此通知 */
+        if(params.request.postData && params.request.postData.includes("message-arrived-expose")) {
+          frameId = params.frameId
+          console.log('请求发送: ', params);
+        }
+      }
       if (method === 'Network.responseReceived') {
       webWindow.webContents.debugger.sendCommand('Network.getResponseBody', { requestId: params.requestId })
         .then(response => {
           if(params.response.mimeType === "application/json") {
-            console.log("message.params",params)
-            console.log("message.response", response)
+            // if(params.response.url.includes("wapi/zpCommon/actionLog/common.json")) {
+            //   console.log("新消息通知",params)
+            // }
+            if(params.frameId === frameId) {
+              console.log("新消息通知",params)
+              console.log("message.response", response)
+            }
+            // console.log("message.params",params)
+            // console.log("message.response", response)
             mainWindow.send("responseReceived",{params, response})
           }
         });
       }
     });
-    webWindow.loadURL("https://premoss.viphrm.com") 
+    webWindow.loadURL("https://www.zhipin.com") 
   } catch (err) {
     console.log('调试器连接失败: ', err)
   }

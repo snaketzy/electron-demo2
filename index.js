@@ -24,7 +24,7 @@ app.commandLine.appendSwitch('remote-debugging-port', '9222');
 
 app.on("ready", () => {
     mainWin = new BrowserWindow({
-        width: 1366,
+        width: 800,
         height: 768,
         webPreferences:{
             nodeIntegration: true,
@@ -36,36 +36,72 @@ app.on("ready", () => {
         resizable: false
     })
 
-    targetWin = new BrowserWindow({
-        width: 1280,
-        height: 768,
-        webPreferences:{
-            webSecurity:false,
-            nodeIntegration: true,
-            contextIsolation: true,
-            nodeIntegrationInSubFrames: true,
-            allowRunningInsecureContent: true,
-            preload: path.join(__dirname, "renderer/preload.mjs")
-        },
-        x: 0,
-        autoHideMenuBar:true,
-        frame: false,
-        // show: false,
-        resizable: false
-    })
-
     console.log("开发测试")
     console.log(os.version())
     
     mainWin.loadFile("renderer/pure/index.html")   
+    createTargetWindow(mainWin, )
     // targetWin.loadURL("https://premoss.viphrm.com") 
 
     console.log("主进程")
-    GetHttpData(targetWin,mainWin)
+   
+    mainWin.on('move', () => {
+      // 为避免性能问题，限制更新频率，例如使用防抖
+      clearTimeout(mainWin.moveTimeout);
+      mainWin.moveTimeout = setTimeout(() => {
+        updateSecondWindowPosition();
+      }, 10); // 100毫秒防抖
+    });
     
     handleRenderer()
     createMenu()
 })
+
+// 更新窗口B位置的函数
+const updateSecondWindowPosition = () => {
+  if (!mainWin || mainWin.isDestroyed()) return;
+  if (!targetWin || targetWin.isDestroyed()) return;
+
+  const mainPosition = mainWin.getPosition();
+  const mainSize = mainWin.getSize();
+
+  // 计算窗口B的新位置
+  const newX = mainPosition[0] + mainSize[0];
+  const newY = mainPosition[1];
+
+  // 设置窗口B的位置
+  targetWin.setPosition(newX, newY);
+}
+
+const createTargetWindow = () => {
+  const mainWinPosition = mainWin.getPosition();
+  const mainWinSize = mainWin.getSize();
+  const targetWinX = mainWinPosition[0] + mainWinSize[0];
+  const targetWinY = mainWinPosition[1];
+
+  targetWin = new BrowserWindow({
+    width: 1280,
+    height: 768,
+    webPreferences:{
+        webSecurity:false,
+        nodeIntegration: true,
+        contextIsolation: true,
+        nodeIntegrationInSubFrames: true,
+        allowRunningInsecureContent: true,
+        preload: path.join(__dirname, "renderer/preload.mjs")
+    },
+    x: targetWinX,
+    y: targetWinY,
+    autoHideMenuBar:true,
+    frame: false,
+    show: false,
+    showInactive: true,
+    resizable: false
+  })
+  GetHttpData(targetWin,mainWin)
+}
+
+
 
 /** 处理渲染进程 */
 const handleRenderer = () => {
@@ -75,7 +111,7 @@ const handleRenderer = () => {
 
     ipcMain.handle("toggleTargetWindow",(event, data) => {
       if(data.status === "show") {
-        targetWin.show()
+        targetWin.showInactive()
       } else {
         targetWin.hide()
       }

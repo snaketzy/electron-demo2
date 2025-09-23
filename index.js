@@ -39,13 +39,15 @@ app.on("ready", () => {
       x: windowX,
       y: windowY,
       width: 1280,
-      height: 200,
-      webPreferences:{
-          nodeIntegration: true,
-          nodeIntegrationInSubFrames: true,
-          contextIsolation: false,
+      height: 400,
+      webPreferences: {
+          preload: path.join(__dirname, './renderer/preload.mjs'),
+          nodeIntegration: false,
+          nodeIntegrationInSubFrames: false,
+          contextIsolation: true,
           webSecurity: false,
-          allowRunningInsecureContent: true
+          allowRunningInsecureContent: true,
+          sandbox: false
       },
       resizable: false
     })
@@ -53,7 +55,8 @@ app.on("ready", () => {
     console.log("开发测试")
     console.log(os.version())
     
-    mainWin.loadFile("renderer/pure/index.html")
+    // mainWin.loadFile("renderer/pure/index.html")
+    mainWin.loadURL("http://localhost:9188")
     createTargetWindow()
     // targetWin.loadURL("https://premoss.viphrm.com") 
 
@@ -117,12 +120,25 @@ const createTargetWindow = () => {
 
 /** 处理渲染进程 */
 const handleRenderer = () => {
+    // 处理预加载脚本转发的渲染进程消息
+    ipcMain.handle('message-from-renderer', async (event, data) => {
+      console.log('返回渲染进程数据:', data);
+      if (data.showBoss) {
+        targetWin.showInactive()
+      } else {
+        targetWin.hide()
+      }
+      return 'Response from main process';
+    });
+
     ipcMain.handle("data-transfer" ,(event,data) => {
         console.log("data:", data)
     })
 
     /** 监听渲染进程的toggleTargetWindow通知 */
-    ipcMain.handle("toggleTargetWindow",(event, data) => {
+    ipcMain.handle("toggleTargetWindow", (event, data) => {
+      debugger
+      return
       if(data.status === "show") {
         targetWin.showInactive()
       } else {
